@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"sort"
+	"sync"
 
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
@@ -18,6 +19,16 @@ var _ = cid.Undef
 var _ = math.E
 var _ = sort.Sort
 
+// scratchPool pools the scratch buffers used by marshaling and unmarshaling implementation
+var cborgenmap_scratchPool = sync.Pool{
+	New: func() interface{} {
+		b := make([]byte, 9)
+		return &b
+	},
+}
+
+var cborgenmap_emptyScratch [9]byte
+
 func (t *SimpleTypeTree) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
@@ -27,7 +38,17 @@ func (t *SimpleTypeTree) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	scratch := make([]byte, 9)
+	scratchPtr := cborgenmap_scratchPool.Get().(*[]byte)
+	scratch := *scratchPtr
+	defer func() {
+		// Empty the buffer before returning. Not strictly necessary if we are
+		// careful about what we read.
+		copy(scratch, cborgenmap_emptyScratch[:])
+		// Avoid scratch slice header from escaping to heap by reusing scratchPtr
+		// which is already on the heap.
+		*scratchPtr = scratch
+		cborgenmap_scratchPool.Put(scratchPtr)
+	}()
 
 	// t.Stuff (testing.SimpleTypeTree) (struct)
 	if len("Stuff") > cbg.MaxLength {
@@ -192,8 +213,18 @@ func (t *SimpleTypeTree) MarshalCBOR(w io.Writer) error {
 func (t *SimpleTypeTree) UnmarshalCBOR(r io.Reader) error {
 	*t = SimpleTypeTree{}
 
+	scratchPtr := cborgenmap_scratchPool.Get().(*[]byte)
+	scratch := *scratchPtr
+	defer func() {
+		// Empty the buffer before returning. Not strictly necessary if we are
+		// careful about what we read.
+		copy(scratch, cborgenmap_emptyScratch[:])
+		// Avoid scratch slice header from escaping to heap by reusing scratchPtr
+		// which is already on the heap.
+		*scratchPtr = scratch
+		cborgenmap_scratchPool.Put(scratchPtr)
+	}()
 	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
 
 	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -424,7 +455,17 @@ func (t *NeedScratchForMap) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	scratch := make([]byte, 9)
+	scratchPtr := cborgenmap_scratchPool.Get().(*[]byte)
+	scratch := *scratchPtr
+	defer func() {
+		// Empty the buffer before returning. Not strictly necessary if we are
+		// careful about what we read.
+		copy(scratch, cborgenmap_emptyScratch[:])
+		// Avoid scratch slice header from escaping to heap by reusing scratchPtr
+		// which is already on the heap.
+		*scratchPtr = scratch
+		cborgenmap_scratchPool.Put(scratchPtr)
+	}()
 
 	// t.Thing (bool) (bool)
 	if len("Thing") > cbg.MaxLength {
@@ -447,8 +488,18 @@ func (t *NeedScratchForMap) MarshalCBOR(w io.Writer) error {
 func (t *NeedScratchForMap) UnmarshalCBOR(r io.Reader) error {
 	*t = NeedScratchForMap{}
 
+	scratchPtr := cborgenmap_scratchPool.Get().(*[]byte)
+	scratch := *scratchPtr
+	defer func() {
+		// Empty the buffer before returning. Not strictly necessary if we are
+		// careful about what we read.
+		copy(scratch, cborgenmap_emptyScratch[:])
+		// Avoid scratch slice header from escaping to heap by reusing scratchPtr
+		// which is already on the heap.
+		*scratchPtr = scratch
+		cborgenmap_scratchPool.Put(scratchPtr)
+	}()
 	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
 
 	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -513,7 +564,17 @@ func (t *SimpleStructV1) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	scratch := make([]byte, 9)
+	scratchPtr := cborgenmap_scratchPool.Get().(*[]byte)
+	scratch := *scratchPtr
+	defer func() {
+		// Empty the buffer before returning. Not strictly necessary if we are
+		// careful about what we read.
+		copy(scratch, cborgenmap_emptyScratch[:])
+		// Avoid scratch slice header from escaping to heap by reusing scratchPtr
+		// which is already on the heap.
+		*scratchPtr = scratch
+		cborgenmap_scratchPool.Put(scratchPtr)
+	}()
 
 	// t.OldStr (string) (string)
 	if len("OldStr") > cbg.MaxLength {
@@ -693,8 +754,18 @@ func (t *SimpleStructV1) MarshalCBOR(w io.Writer) error {
 func (t *SimpleStructV1) UnmarshalCBOR(r io.Reader) error {
 	*t = SimpleStructV1{}
 
+	scratchPtr := cborgenmap_scratchPool.Get().(*[]byte)
+	scratch := *scratchPtr
+	defer func() {
+		// Empty the buffer before returning. Not strictly necessary if we are
+		// careful about what we read.
+		copy(scratch, cborgenmap_emptyScratch[:])
+		// Avoid scratch slice header from escaping to heap by reusing scratchPtr
+		// which is already on the heap.
+		*scratchPtr = scratch
+		cborgenmap_scratchPool.Put(scratchPtr)
+	}()
 	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
 
 	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -894,7 +965,17 @@ func (t *SimpleStructV2) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	scratch := make([]byte, 9)
+	scratchPtr := cborgenmap_scratchPool.Get().(*[]byte)
+	scratch := *scratchPtr
+	defer func() {
+		// Empty the buffer before returning. Not strictly necessary if we are
+		// careful about what we read.
+		copy(scratch, cborgenmap_emptyScratch[:])
+		// Avoid scratch slice header from escaping to heap by reusing scratchPtr
+		// which is already on the heap.
+		*scratchPtr = scratch
+		cborgenmap_scratchPool.Put(scratchPtr)
+	}()
 
 	// t.OldStr (string) (string)
 	if len("OldStr") > cbg.MaxLength {
@@ -1247,8 +1328,18 @@ func (t *SimpleStructV2) MarshalCBOR(w io.Writer) error {
 func (t *SimpleStructV2) UnmarshalCBOR(r io.Reader) error {
 	*t = SimpleStructV2{}
 
+	scratchPtr := cborgenmap_scratchPool.Get().(*[]byte)
+	scratch := *scratchPtr
+	defer func() {
+		// Empty the buffer before returning. Not strictly necessary if we are
+		// careful about what we read.
+		copy(scratch, cborgenmap_emptyScratch[:])
+		// Avoid scratch slice header from escaping to heap by reusing scratchPtr
+		// which is already on the heap.
+		*scratchPtr = scratch
+		cborgenmap_scratchPool.Put(scratchPtr)
+	}()
 	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
 
 	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -1601,7 +1692,17 @@ func (t *RenamedFields) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	scratch := make([]byte, 9)
+	scratchPtr := cborgenmap_scratchPool.Get().(*[]byte)
+	scratch := *scratchPtr
+	defer func() {
+		// Empty the buffer before returning. Not strictly necessary if we are
+		// careful about what we read.
+		copy(scratch, cborgenmap_emptyScratch[:])
+		// Avoid scratch slice header from escaping to heap by reusing scratchPtr
+		// which is already on the heap.
+		*scratchPtr = scratch
+		cborgenmap_scratchPool.Put(scratchPtr)
+	}()
 
 	// t.Foo (int64) (int64)
 	if len("foo") > cbg.MaxLength {
@@ -1653,8 +1754,18 @@ func (t *RenamedFields) MarshalCBOR(w io.Writer) error {
 func (t *RenamedFields) UnmarshalCBOR(r io.Reader) error {
 	*t = RenamedFields{}
 
+	scratchPtr := cborgenmap_scratchPool.Get().(*[]byte)
+	scratch := *scratchPtr
+	defer func() {
+		// Empty the buffer before returning. Not strictly necessary if we are
+		// careful about what we read.
+		copy(scratch, cborgenmap_emptyScratch[:])
+		// Avoid scratch slice header from escaping to heap by reusing scratchPtr
+		// which is already on the heap.
+		*scratchPtr = scratch
+		cborgenmap_scratchPool.Put(scratchPtr)
+	}()
 	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
 
 	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {

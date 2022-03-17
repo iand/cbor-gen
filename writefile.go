@@ -13,7 +13,7 @@ import (
 //
 // The MarshalCBOR and UnmarshalCBOR implementations will marshal/unmarshal each type's fields as a
 // fixed-length CBOR array of field values.
-func WriteTupleEncodersToFile(fname, pkg string, types ...interface{}) error {
+func WriteTupleEncodersToFile(fname, pkg string, includeGlobals bool, types ...interface{}) error {
 	buf := new(bytes.Buffer)
 
 	typeInfos := make([]*GenTypeInfo, len(types))
@@ -25,7 +25,7 @@ func WriteTupleEncodersToFile(fname, pkg string, types ...interface{}) error {
 		typeInfos[i] = gti
 	}
 
-	if err := PrintHeaderAndUtilityMethods(buf, pkg, typeInfos); err != nil {
+	if err := PrintHeaderAndUtilityMethods(buf, pkg, typeInfos, tupleEncoderScope); err != nil {
 		return xerrors.Errorf("failed to write header: %w", err)
 	}
 
@@ -60,7 +60,7 @@ func WriteTupleEncodersToFile(fname, pkg string, types ...interface{}) error {
 //
 // The MarshalCBOR and UnmarshalCBOR implementations will marshal/unmarshal each type's fields as a
 // map of field names to field values.
-func WriteMapEncodersToFile(fname, pkg string, types ...interface{}) error {
+func WriteMapEncodersToFile(fname, pkg string, includeGlobals bool, types ...interface{}) error {
 	buf := new(bytes.Buffer)
 
 	typeInfos := make([]*GenTypeInfo, len(types))
@@ -72,7 +72,7 @@ func WriteMapEncodersToFile(fname, pkg string, types ...interface{}) error {
 		typeInfos[i] = gti
 	}
 
-	if err := PrintHeaderAndUtilityMethods(buf, pkg, typeInfos); err != nil {
+	if err := PrintHeaderAndUtilityMethods(buf, pkg, typeInfos, mapEncoderScope); err != nil {
 		return xerrors.Errorf("failed to write header: %w", err)
 	}
 
@@ -101,3 +101,8 @@ func WriteMapEncodersToFile(fname, pkg string, types ...interface{}) error {
 
 	return nil
 }
+
+const (
+	mapEncoderScope   = "cborgenmap"
+	tupleEncoderScope = "cborgentuple"
+)
